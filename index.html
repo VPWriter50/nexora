@@ -534,8 +534,7 @@ function renderNexoraTokenMarket() {
                 <td style="text-align:right;padding:12px">${compactMoney(market.market_cap_usd)}</td>
                 <td style="text-align:right;padding:12px">${compactMoney(market.volume_24h_usd)}</td>
                 <td style="text-align:right;padding:12px;color:${color}">${changeText}</td>
-                <td style="text-align:right;padding:12px">${supply(market.circulating_supply)}</td>
-            </tr>`;
+<td style="text-align:right;padding:12px">${supply(market.circulating_supply ?? token.circulating_supply)}</td>            </tr>`;
         }).join("") || `
             <tr>
                 <td colspan="6" style="padding:20px;text-align:center">
