@@ -525,8 +525,11 @@ function renderNexoraTokenMarket() {
 
             return `<tr>
                 <td style="padding:12px">
-                    <strong>${escapeHTML(token.name)}</strong>
-                    <div class="sub">${escapeHTML((token.symbol || "").toUpperCase())}</div>
+<strong>
+    <a href="#" class="nexora-token-link" data-token-id="${token.id}" style="color:inherit;text-decoration:none">
+        ${escapeHTML(token.name)}
+    </a>
+</strong>                    <div class="sub">${escapeHTML((token.symbol || "").toUpperCase())}</div>
                 </td>
                 <td style="text-align:right;padding:12px">${money(market.price_usd)}</td>
                 <td style="text-align:right;padding:12px">${compactMoney(market.market_cap_usd)}</td>
@@ -570,7 +573,45 @@ function renderNexoraTokenMarket() {
     if (searchInput && !searchInput.dataset.bound) {
         searchInput.addEventListener("input", e => renderRows(e.target.value));
         searchInput.dataset.bound = "true";
-    }
+    if (!tbody.dataset.detailBound) {
+    tbody.addEventListener("click", function(e) {
+        const link = e.target.closest(".nexora-token-link");
+        if (!link) return;
+
+        e.preventDefault();
+
+        const token = data.tokens.find(
+            item => item.id === link.dataset.tokenId
+        );
+
+        if (!token) return;
+
+        const market = data.latestTokenSnapshots.get(token.id);
+
+        const details = [
+            "NEXORA TOKEN INTELLIGENCE",
+            "",
+            "Name: " + token.name,
+            "Symbol: " + (token.symbol || "").toUpperCase(),
+            "Blockchain: " + (token.blockchain || "Not available"),
+            "Price: " + money(market?.price_usd),
+            "Market cap: " + compactMoney(market?.market_cap_usd),
+            "24h volume: " + compactMoney(market?.volume_24h_usd),
+            "24h change: " + (market?.price_change_24h_percent ?? "—") + "%",
+            "Circulating supply: " + supply(
+                market?.circulating_supply ?? token.circulating_supply
+            ),
+            "Total supply: " + supply(market?.total_supply),
+            "Maximum supply: " + supply(market?.max_supply),
+            "",
+            "Snapshot: " + (market?.observed_at || "Unavailable")
+        ];
+
+        alert(details.join("\n"));
+    });
+
+    tbody.dataset.detailBound = "true";
+}
 }
 loadNexoraDatabase();
 loadLiveData();
