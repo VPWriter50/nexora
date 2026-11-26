@@ -573,6 +573,7 @@ function renderNexoraTokenMarket() {
     if (searchInput && !searchInput.dataset.bound) {
         searchInput.addEventListener("input", e => renderRows(e.target.value));
         searchInput.dataset.bound = "true";
+    }
     if (!tbody.dataset.detailBound) {
     tbody.addEventListener("click", function(e) {
         const link = e.target.closest(".nexora-token-link");
