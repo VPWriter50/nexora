@@ -94,7 +94,76 @@ main{padding:30px 34px 60px;min-width:0}.eyebrow{font-size:10px;color:var(--blue
 <section id="testnets" class="page hidden"><div class="page-head"><div><div class="eyebrow">EARLY ECOSYSTEM PARTICIPATION</div><h1>Testnets & incentives</h1><p class="sub">Track testnet campaigns, devnets, points programmes and ecosystem participation.</p></div></div><div class="notice">Campaign status is not populated from an authoritative global API yet. Records must be submitted with official campaign links and reviewed before publication.</div><div class="panel"><h2>Testnet research record</h2><div class="detail-section"><h3>Required fields</h3><p>Project · Network · Campaign name · Start/end date · Official instructions · Eligibility · Rewards status · Wallet/security warnings · Source evidence · Last checked date.</p></div><div class="detail-section"><h3>Lifecycle statuses</h3><p>Upcoming · Active · Ended · Rewards announced · Distributed · Cancelled · Unverified.</p></div></div></section>
 <section id="airdrops" class="page hidden"><div class="page-head"><div><div class="eyebrow">USER OPPORTUNITIES</div><h1>Airdrops & points</h1><p class="sub">Confirmed, potential, ongoing and completed airdrop programmes.</p></div></div><div class="notice">We will never label a project as having a confirmed airdrop without an official announcement. Potential airdrop speculation will be separated and clearly marked.</div><div class="panel"><h2>Airdrop intelligence fields</h2><div class="detail-section"><h3>Campaign details</h3><p>Project · Network · Official campaign URL · Tasks · Eligibility · Snapshot · Claim window · Token allocation if disclosed · Distribution status · Scam-risk checks.</p></div><div class="detail-section"><h3>Safety controls</h3><p>Warn about seed phrase requests, malicious approvals, fake claim pages, impersonation and suspicious wallet connections.</p></div></div></section>
 <section id="launches" class="page hidden"><div class="page-head"><div><div class="eyebrow">TOKEN GENERATION & CAPITAL MARKETS</div><h1>IDO / ICO / IEO & launchpads</h1><p class="sub">Upcoming, live and completed token sales with terms and source records.</p></div></div><div class="panel"><h2>Launch calendar data model</h2><div class="detail-section"><h3>Sale terms</h3><p>Project · Sale type · Launchpad · Dates · Token price · FDV · Allocation · Vesting · Accepted assets · Jurisdiction restrictions · Official participation link.</p></div><div class="detail-section"><h3>Verification</h3><p>Each sale requires an official project or launchpad source. Unconfirmed dates and estimated valuations remain labelled.</p></div></div></section>
-<section id="tokens" class="page hidden"><div class="page-head"><div><div class="eyebrow">TOKEN RESEARCH</div><h1>Token intelligence</h1><p class="sub">Tokenomics, contracts, unlocks, listings and supply schedules.</p></div></div><div class="panel"><h2>Token intelligence modules</h2><div class="detail-section"><h3>Tokenomics</h3><p>Supply, circulating supply, allocation, vesting, utility, governance and emissions with source dates.</p></div><div class="detail-section"><h3>Unlock calendar</h3><p>Unlock amount, percentage of supply, beneficiary, cliff/linear schedule and source. No inferred schedules.</p></div><div class="detail-section"><h3>Listings & liquidity</h3><p>Exchange, pair, contract address, liquidity, volume and timestamp.</p></div></div></section>
+
+<section id="tokens" class="page hidden">
+    <div class="page-head">
+        <div>
+            <div class="eyebrow">COINGECKO · MARKET DATA</div>
+            <h1>Token intelligence</h1>
+            <p class="sub">Market metrics, token supply and historical market snapshots stored in the NEXORA research database.</p>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat">
+            <span>Tokens tracked</span>
+            <strong id="nexoraTokenCount">—</strong>
+        </div>
+        <div class="stat">
+            <span>Market cap tracked</span>
+            <strong id="nexoraMarketCap">—</strong>
+        </div>
+        <div class="stat">
+            <span>24h volume tracked</span>
+            <strong id="nexoraVolume">—</strong>
+        </div>
+        <div class="stat">
+            <span>Data provider</span>
+            <strong>CoinGecko</strong>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="toolbar" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div>
+                <h2>Token market overview</h2>
+                <p class="sub" id="nexoraTokenUpdated">Waiting for database data...</p>
+            </div>
+            <input
+                id="nexoraTokenSearch"
+                type="search"
+                placeholder="Search token or symbol..."
+                style="padding:10px 14px;border-radius:10px;min-width:220px;max-width:100%"
+            >
+        </div>
+
+        <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;min-width:850px">
+                <thead>
+                    <tr>
+                        <th style="text-align:left;padding:12px">Asset</th>
+                        <th style="text-align:right;padding:12px">Price</th>
+                        <th style="text-align:right;padding:12px">Market cap</th>
+                        <th style="text-align:right;padding:12px">24h volume</th>
+                        <th style="text-align:right;padding:12px">24h change</th>
+                        <th style="text-align:right;padding:12px">Circulating supply</th>
+                    </tr>
+                </thead>
+                <tbody id="nexoraTokenTable">
+                    <tr>
+                        <td colspan="6" style="padding:20px;text-align:center">
+                            Loading token market data...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p class="sub" style="margin-top:14px">
+            Source: CoinGecko via NEXORA database. Values reflect the latest successfully retrieved snapshot, not necessarily real-time prices.
+        </p>
+    </div>
+</section>
 <section id="reports" class="page hidden"><div class="page-head"><div><div class="eyebrow">ORIGINAL RESEARCH</div><h1>Research & reports</h1><p class="sub">NEXORA's proprietary analysis, sector maps and project deep dives.</p></div></div><div class="panel"><h2>Research publishing workflow</h2><div class="detail-section"><h3>Research brief</h3><p>Thesis · Market map · Product analysis · Team and backers · Technical evidence · Tokenomics · Adoption · Risks · Catalysts · Sources · Analyst confidence.</p></div><div class="detail-section"><h3>Publication states</h3><p>Draft · Under review · Approved · Published · Updated · Retracted.</p></div></div></section>
 <section id="alerts" class="page hidden"><div class="page-head"><div><div class="eyebrow">MONITORING</div><h1>Alerts & monitoring</h1><p class="sub">Watch for funding, campaign, product, token and ecosystem changes.</p></div></div><div class="notice">Alert delivery requires a connected backend and notification provider. This page defines the alert catalogue; no notifications are sent from this static build.</div><div class="panel"><h2>Alert types</h2><div class="detail-section"><h3>Project changes</h3><p>New funding · Investor added · Testnet launched · Airdrop announced · Mainnet released · TGE scheduled · Token listed · Security incident · Governance proposal.</p></div><div class="detail-section"><h3>Monitoring controls</h3><p>Source polling interval · Change detection · Confidence threshold · Duplicate suppression · User watchlist rules · Delivery channel.</p></div></div></section>
 <section id="admin" class="page hidden"><div class="page-head"><div><div class="eyebrow">PLATFORM OPERATIONS</div><h1>Admin & data sources</h1><p class="sub">API connections, ingestion health, source quality and review operations.</p></div></div><div class="panel"><h2>Planned source connectors</h2><div class="source-row"><span>DefiLlama · Public endpoints</span><span class="tag green">Live in browser</span></div><div class="source-row"><span>DEX Screener · Public endpoints</span><span class="tag green">Live in browser</span></div><div class="source-row"><span>RootData · API key required</span><span class="tag amber">Connect after account setup</span></div><div class="source-row"><span>CoinGecko · API key recommended</span><span class="tag amber">Connect after account setup</span></div><div class="source-row"><span>GitHub · Token recommended for higher limits</span><span class="tag amber">Backend connector pending</span></div><div class="source-row"><span>Official project sources</span><span class="tag">Crawler/curation pending</span></div></div></section>
@@ -204,7 +273,129 @@ async function nexoraFetch(table, query) {
     return response.json();
 }
 
-async function loadNexoraDatabase() {
+
+function renderNexoraTokenMarket() {
+    const data = window.NEXORA_DATA;
+
+    if (!data) return;
+
+    const tbody = document.getElementById("nexoraTokenTable");
+    if (!tbody) return;
+
+    const rows = data.tokens.map(token => {
+        const market = data.latestTokenSnapshots.get(token.id);
+
+        return { token, market };
+    }).filter(item => item.market);
+
+    const formatUSD = value => {
+        if (value == null) return "—";
+        return "$" + Number(value).toLocaleString("en-US", {
+            maximumFractionDigits: 2
+        });
+    };
+
+    const formatCompactUSD = value => {
+        if (value == null) return "—";
+        return "$" + Number(value).toLocaleString("en-US", {
+            notation: "compact",
+            maximumFractionDigits: 2
+        });
+    };
+
+    const formatSupply = value => {
+        if (value == null) return "—";
+        return Number(value).toLocaleString("en-US", {
+            notation: "compact",
+            maximumFractionDigits: 2
+        });
+    };
+
+    const renderRows = search => {
+        const filtered = rows.filter(({ token }) => {
+            const term = search.toLowerCase();
+
+            return token.name.toLowerCase().includes(term) ||
+                (token.symbol || "").toLowerCase().includes(term);
+        });
+
+        tbody.innerHTML = filtered.map(({ token, market }) => {
+            const change = Number(market.price_change_24h_percent);
+            const changeColor = change >= 0 ? "#16c784" : "#ea3943";
+
+            return `
+                <tr>
+                    <td style="padding:12px">
+                        <strong>${escapeTokenHTML(token.name)}</strong>
+                        <div class="sub">${escapeTokenHTML((token.symbol || "").toUpperCase())}</div>
+                    </td>
+                    <td style="text-align:right;padding:12px">
+                        ${formatUSD(market.price_usd)}
+                    </td>
+                    <td style="text-align:right;padding:12px">
+                        ${formatCompactUSD(market.market_cap_usd)}
+                    </td>
+                    <td style="text-align:right;padding:12px">
+                        ${formatCompactUSD(market.volume_24h_usd)}
+                    </td>
+                    <td style="text-align:right;padding:12px;color:${changeColor}">
+                        ${Number.isFinite(change) ? (change > 0 ? "+" : "") + change.toFixed(2) + "%" : "—"}
+                    </td>
+                    <td style="text-align:right;padding:12px">
+                        ${formatSupply(market.circulating_supply)}
+                    </td>
+                </tr>
+            `;
+        }).join("");
+
+        if (!filtered.length) {
+            tbody.innerHTML = `
+                <tr><td colspan="6" style="padding:20px;text-align:center">
+                    No matching token market records found.
+                </td></tr>`;
+        }
+    };
+
+    // Escape external token names before displaying them.
+    window.escapeTokenHTML = function(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[char]);
+    };
+
+    const totalMarketCap = rows.reduce(
+        (sum, item) => sum + Number(item.market.market_cap_usd || 0), 0
+    );
+
+    const totalVolume = rows.reduce(
+        (sum, item) => sum + Number(item.market.volume_24h_usd || 0), 0
+    );
+
+    document.getElementById("nexoraTokenCount").textContent = rows.length;
+    document.getElementById("nexoraMarketCap").textContent = formatCompactUSD(totalMarketCap);
+    document.getElementById("nexoraVolume").textContent = formatCompactUSD(totalVolume);
+
+    const latestTimestamp = rows
+        .map(item => item.market.observed_at)
+        .filter(Boolean)
+        .sort()
+        .at(-1);
+
+    document.getElementById("nexoraTokenUpdated").textContent =
+        latestTimestamp
+            ? "Latest snapshot: " + new Date(latestTimestamp).toLocaleString()
+            : "Snapshot timestamp unavailable";
+
+    renderRows("");
+
+    document.getElementById("nexoraTokenSearch").addEventListener("input", event => {
+        renderRows(event.target.value);
+    });
+}
     try {
         console.log("NEXORA: Connecting to research database...");
 
@@ -273,12 +464,116 @@ async function loadNexoraDatabase() {
         console.log("Tokens:", tokens.length);
         console.log("Token market snapshots:", tokenSnapshots.length);
 
-        return window.NEXORA_DATA;
+        renderNexoraTokenMarket();return window.NEXORA_DATA;
 
     } catch (error) {
         console.error("NEXORA database connection failed:", error);
         return null;
     }
 }
+
+function renderNexoraTokenMarket() {
+    const data = window.NEXORA_DATA;
+    const tbody = document.getElementById("nexoraTokenTable");
+
+    if (!data || !tbody) return;
+
+    const rows = data.tokens.map(token => ({
+        token,
+        market: data.latestTokenSnapshots.get(token.id)
+    })).filter(x => x.market);
+
+    const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, c => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    }[c]));
+
+    const money = v => v == null ? "—" :
+        "$" + Number(v).toLocaleString("en-US", { maximumFractionDigits: 2 });
+
+    const compactMoney = v => v == null ? "—" :
+        "$" + Number(v).toLocaleString("en-US", {
+            notation: "compact",
+            maximumFractionDigits: 2
+        });
+
+    const supply = v => v == null ? "—" :
+        Number(v).toLocaleString("en-US", {
+            notation: "compact",
+            maximumFractionDigits: 2
+        });
+
+    const renderRows = search => {
+        const term = search.toLowerCase();
+
+        const filtered = rows.filter(({ token }) =>
+            (token.name || "").toLowerCase().includes(term) ||
+            (token.symbol || "").toLowerCase().includes(term)
+        );
+
+        tbody.innerHTML = filtered.map(({ token, market }) => {
+            const change = Number(market.price_change_24h_percent);
+            const validChange = market.price_change_24h_percent != null && Number.isFinite(change);
+            const changeText = validChange
+                ? `${change > 0 ? "+" : ""}${change.toFixed(2)}%`
+                : "—";
+            const color = validChange
+                ? (change >= 0 ? "#16c784" : "#ea3943")
+                : "inherit";
+
+            return `<tr>
+                <td style="padding:12px">
+                    <strong>${escapeHTML(token.name)}</strong>
+                    <div class="sub">${escapeHTML((token.symbol || "").toUpperCase())}</div>
+                </td>
+                <td style="text-align:right;padding:12px">${money(market.price_usd)}</td>
+                <td style="text-align:right;padding:12px">${compactMoney(market.market_cap_usd)}</td>
+                <td style="text-align:right;padding:12px">${compactMoney(market.volume_24h_usd)}</td>
+                <td style="text-align:right;padding:12px;color:${color}">${changeText}</td>
+                <td style="text-align:right;padding:12px">${supply(market.circulating_supply)}</td>
+            </tr>`;
+        }).join("") || `
+            <tr>
+                <td colspan="6" style="padding:20px;text-align:center">
+                    No matching token market records found.
+                </td>
+            </tr>`;
+    };
+
+    const totalMarketCap = rows.reduce(
+        (sum, x) => sum + Number(x.market.market_cap_usd || 0), 0
+    );
+
+    const totalVolume = rows.reduce(
+        (sum, x) => sum + Number(x.market.volume_24h_usd || 0), 0
+    );
+
+    document.getElementById("nexoraTokenCount").textContent = rows.length;
+    document.getElementById("nexoraMarketCap").textContent = compactMoney(totalMarketCap);
+    document.getElementById("nexoraVolume").textContent = compactMoney(totalVolume);
+
+    const newest = rows
+        .map(x => x.market.observed_at)
+        .filter(Boolean)
+        .sort()
+        .at(-1);
+
+    document.getElementById("nexoraTokenUpdated").textContent =
+        newest ? "Latest snapshot: " + new Date(newest).toLocaleString()
+               : "Snapshot timestamp unavailable";
+
+    renderRows("");
+
+    const searchInput = document.getElementById("nexoraTokenSearch");
+
+    if (searchInput && !searchInput.dataset.bound) {
+        searchInput.addEventListener("input", e => renderRows(e.target.value));
+        searchInput.dataset.bound = "true";
+    }
+}
+loadNexoraDatabase();
 loadLiveData();
 </script></body></html>
