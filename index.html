@@ -173,5 +173,112 @@ async function loadLiveData(force=false){
 async function loadDexSearch(){const q=(document.getElementById('dexQuery')?.value||'solana').trim();const body=document.getElementById('dexRows');if(!body)return;body.innerHTML='<tr><td colspan="5">Searching…</td></tr>';try{const r=await fetch('https://api.dexscreener.com/latest/dex/search?q='+encodeURIComponent(q));if(!r.ok)throw new Error('DEX Screener HTTP '+r.status);const j=await r.json();const pairs=(j.pairs||[]).sort((a,b)=>(Number(b.liquidity?.usd)||0)-(Number(a.liquidity?.usd)||0)).slice(0,12);document.getElementById('dexCount').textContent=(j.pairs||[]).length;body.innerHTML=pairs.map(x=>`<tr><td><strong>${escapeHtml(x.baseToken?.symbol||'?')}/${escapeHtml(x.quoteToken?.symbol||'?')}</strong><br><span class="ticker">${escapeHtml(x.chainId||'')} · ${escapeHtml(x.pairAddress||'').slice(0,12)}…</span></td><td>${escapeHtml(x.dexId||'—')}</td><td>${x.priceUsd?'$'+Number(x.priceUsd).toPrecision(5):'—'}</td><td>${fmtUsd(x.liquidity?.usd)}</td><td>${fmtUsd(x.volume?.h24)}</td></tr>`).join('')||'<tr><td colspan="5">No pairs returned for this query.</td></tr>';}catch(e){body.innerHTML='<tr><td colspan="5">DEX Screener unavailable: '+escapeHtml(e.message)+'</td></tr>';}}
 function fmtUsd(v){if(v==null||!Number.isFinite(Number(v)))return '—';return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',notation:'compact',maximumFractionDigits:2}).format(Number(v));}
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// ==========================================
+// NEXORA DATABASE CONNECTION
+// ==========================================
+
+const NEXORA_SUPABASE_URL = 
+    "https://vbsfwjrezueougnjbtfe.supabase.co";
+
+// Replace this placeholder with your Supabase
+// Publishable key. Never use the service-role key here.
+const NEXORA_SUPABASE_KEY = "sb_publishable_A7dZVmkNQKqXZXD35_vD6w_5_qUe5Xm";
+
+async function nexoraFetch(table, query) {
+    const response = await fetch(
+        `${NEXORA_SUPABASE_URL}/rest/v1/${table}?${query}`,
+        {
+            headers: {
+                "apikey": NEXORA_SUPABASE_KEY,
+                "Authorization": `Bearer ${NEXORA_SUPABASE_KEY}`
+            }
+        }
+    );
+
+    if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`${table}: ${response.status} - ${error}`);
+    }
+
+    return response.json();
+}
+
+async function loadNexoraDatabase() {
+    try {
+        console.log("NEXORA: Connecting to research database...");
+
+        const [
+            ecosystems,
+            ecosystemMetrics,
+            tokens,
+            tokenSnapshots
+        ] = await Promise.all([
+            nexoraFetch(
+                "ecosystems",
+                "select=id,name,category,gecko_id,token_symbol&order=name.asc&limit=500"
+            ),
+            nexoraFetch(
+                "ecosystem_metrics_snapshots",
+                "select=ecosystem_id,metric_name,metric_value,metric_unit,observed_at&metric_name=eq.total_value_locked&order=observed_at.desc&limit=1000"
+            ),
+            nexoraFetch(
+                "tokens",
+                "select=id,name,symbol,blockchain,listing_status,coingecko_id&order=name.asc&limit=200"
+            ),
+            nexoraFetch(
+                "token_market_snapshots",
+                "select=token_id,price_usd,market_cap_usd,volume_24h_usd,price_change_24h_percent,observed_at&order=observed_at.desc&limit=500"
+            )
+        ]);
+
+        // Keep the newest snapshot for each ecosystem.
+        const latestEcosystemMetrics = new Map();
+
+        ecosystemMetrics.forEach(metric => {
+            if (!latestEcosystemMetrics.has(metric.ecosystem_id)) {
+                latestEcosystemMetrics.set(
+                    metric.ecosystem_id,
+                    metric
+                );
+            }
+        });
+
+        // Keep the newest market snapshot for each token.
+        const latestTokenSnapshots = new Map();
+
+        tokenSnapshots.forEach(snapshot => {
+            if (!latestTokenSnapshots.has(snapshot.token_id)) {
+                latestTokenSnapshots.set(
+                    snapshot.token_id,
+                    snapshot
+                );
+            }
+        });
+
+        // Make the data available to NEXORA's interface.
+        window.NEXORA_DATA = {
+            ecosystems,
+            ecosystemMetrics,
+            latestEcosystemMetrics,
+            tokens,
+            tokenSnapshots,
+            latestTokenSnapshots,
+            loadedAt: new Date().toISOString()
+        };
+
+        console.log("NEXORA DATABASE CONNECTION SUCCESSFUL");
+        console.log("Ecosystems:", ecosystems.length);
+        console.log("Ecosystem TVL snapshots:", ecosystemMetrics.length);
+        console.log("Tokens:", tokens.length);
+        console.log("Token market snapshots:", tokenSnapshots.length);
+
+        return window.NEXORA_DATA;
+
+    } catch (error) {
+        console.error("NEXORA database connection failed:", error);
+        return null;
+    }
+}
 loadLiveData();
 </script></body></html>
