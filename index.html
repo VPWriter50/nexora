@@ -416,12 +416,10 @@ function renderNexoraTokenMarket() {
             ),
             nexoraFetch(
                 "tokens",
-                "select=id,name,symbol,blockchain,listing_status,coingecko_id&order=name.asc&limit=200"
-            ),
+"select=id,name,symbol,blockchain,listing_status,coingecko_id,circulating_supply&order=name.asc&limit=200"            ),
             nexoraFetch(
                 "token_market_snapshots",
-                "select=token_id,price_usd,market_cap_usd,volume_24h_usd,price_change_24h_percent,observed_at&order=observed_at.desc&limit=500"
-            )
+"select=token_id,price_usd,market_cap_usd,volume_24h_usd,price_change_24h_percent,circulating_supply,total_supply,max_supply,observed_at&order=observed_at.desc&limit=500"            )
         ]);
 
         // Keep the newest snapshot for each ecosystem.
