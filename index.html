@@ -396,7 +396,8 @@ function renderNexoraTokenMarket() {
         renderRows(event.target.value);
     });
 }
-    try {
+    async function loadNexoraDatabase() {
+        try {
         console.log("NEXORA: Connecting to research database...");
 
         const [
