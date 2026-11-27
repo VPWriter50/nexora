@@ -274,202 +274,25 @@ async function nexoraFetch(table, query) {
 }
 
 
-function renderNexoraTokenMarket() {
-    const data = window.NEXORA_DATA;
+// ==========================================
+// NEXORA TOKEN INTELLIGENCE
+// ==========================================
 
-    if (!data) return;
+// Safely escape external data before displaying it.
+window.escapeTokenHTML = function(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+};
 
-    const tbody = document.getElementById("nexoraTokenTable");
-    if (!tbody) return;
 
-    const rows = data.tokens.map(token => {
-        const market = data.latestTokenSnapshots.get(token.id);
-
-        return { token, market };
-    }).filter(item => item.market);
-
-    const formatUSD = value => {
-        if (value == null) return "—";
-        return "$" + Number(value).toLocaleString("en-US", {
-            maximumFractionDigits: 2
-        });
-    };
-
-    const formatCompactUSD = value => {
-        if (value == null) return "—";
-        return "$" + Number(value).toLocaleString("en-US", {
-            notation: "compact",
-            maximumFractionDigits: 2
-        });
-    };
-
-    const formatSupply = value => {
-        if (value == null) return "—";
-        return Number(value).toLocaleString("en-US", {
-            notation: "compact",
-            maximumFractionDigits: 2
-        });
-    };
-
-    const renderRows = search => {
-        const filtered = rows.filter(({ token }) => {
-            const term = search.toLowerCase();
-
-            return token.name.toLowerCase().includes(term) ||
-                (token.symbol || "").toLowerCase().includes(term);
-        });
-
-        tbody.innerHTML = filtered.map(({ token, market }) => {
-            const change = Number(market.price_change_24h_percent);
-            const changeColor = change >= 0 ? "#16c784" : "#ea3943";
-
-            return `
-                <tr>
-                    <td style="padding:12px">
-                        <strong>${escapeTokenHTML(token.name)}</strong>
-                        <div class="sub">${escapeTokenHTML((token.symbol || "").toUpperCase())}</div>
-                    </td>
-                    <td style="text-align:right;padding:12px">
-                        ${formatUSD(market.price_usd)}
-                    </td>
-                    <td style="text-align:right;padding:12px">
-                        ${formatCompactUSD(market.market_cap_usd)}
-                    </td>
-                    <td style="text-align:right;padding:12px">
-                        ${formatCompactUSD(market.volume_24h_usd)}
-                    </td>
-                    <td style="text-align:right;padding:12px;color:${changeColor}">
-                        ${Number.isFinite(change) ? (change > 0 ? "+" : "") + change.toFixed(2) + "%" : "—"}
-                    </td>
-                    <td style="text-align:right;padding:12px">
-                        ${formatSupply(market.circulating_supply)}
-                    </td>
-                </tr>
-            `;
-        }).join("");
-
-        if (!filtered.length) {
-            tbody.innerHTML = `
-                <tr><td colspan="6" style="padding:20px;text-align:center">
-                    No matching token market records found.
-                </td></tr>`;
-        }
-    };
-
-    // Escape external token names before displaying them.
-    window.escapeTokenHTML = function(value) {
-        return String(value ?? "").replace(/[&<>"']/g, char => ({
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#39;"
-        })[char]);
-    };
-
-    const totalMarketCap = rows.reduce(
-        (sum, item) => sum + Number(item.market.market_cap_usd || 0), 0
-    );
-
-    const totalVolume = rows.reduce(
-        (sum, item) => sum + Number(item.market.volume_24h_usd || 0), 0
-    );
-
-    document.getElementById("nexoraTokenCount").textContent = rows.length;
-    document.getElementById("nexoraMarketCap").textContent = formatCompactUSD(totalMarketCap);
-    document.getElementById("nexoraVolume").textContent = formatCompactUSD(totalVolume);
-
-    const latestTimestamp = rows
-        .map(item => item.market.observed_at)
-        .filter(Boolean)
-        .sort()
-        .at(-1);
-
-    document.getElementById("nexoraTokenUpdated").textContent =
-        latestTimestamp
-            ? "Latest snapshot: " + new Date(latestTimestamp).toLocaleString()
-            : "Snapshot timestamp unavailable";
-
-    renderRows("");
-
-    document.getElementById("nexoraTokenSearch").addEventListener("input", event => {
-        renderRows(event.target.value);
-    });
-}
-    async function loadNexoraDatabase() {
-        try {
-        console.log("NEXORA: Connecting to research database...");
-
-        const [
-            ecosystems,
-            ecosystemMetrics,
-            tokens,
-            tokenSnapshots
-        ] = await Promise.all([
-            nexoraFetch(
-                "ecosystems",
-                "select=id,name,category,gecko_id,token_symbol&order=name.asc&limit=500"
-            ),
-            nexoraFetch(
-                "ecosystem_metrics_snapshots",
-                "select=ecosystem_id,metric_name,metric_value,metric_unit,observed_at&metric_name=eq.total_value_locked&order=observed_at.desc&limit=1000"
-            ),
-            nexoraFetch(
-                "tokens",
-select=id,name,symbol,blockchain,listing_status,coingecko_id,circulating_supply,official_reported_circulating_supply,adjusted_circulating_supply,adjusted_supply_status,supply_methodology,supply_observed_at            nexoraFetch(
-                "token_market_snapshots",
-"select=token_id,price_usd,market_cap_usd,volume_24h_usd,price_change_24h_percent,circulating_supply,total_supply,max_supply,observed_at&order=observed_at.desc&limit=500"            )
-        ]);
-
-        // Keep the newest snapshot for each ecosystem.
-        const latestEcosystemMetrics = new Map();
-
-        ecosystemMetrics.forEach(metric => {
-            if (!latestEcosystemMetrics.has(metric.ecosystem_id)) {
-                latestEcosystemMetrics.set(
-                    metric.ecosystem_id,
-                    metric
-                );
-            }
-        });
-
-        // Keep the newest market snapshot for each token.
-        const latestTokenSnapshots = new Map();
-
-        tokenSnapshots.forEach(snapshot => {
-            if (!latestTokenSnapshots.has(snapshot.token_id)) {
-                latestTokenSnapshots.set(
-                    snapshot.token_id,
-                    snapshot
-                );
-            }
-        });
-
-        // Make the data available to NEXORA's interface.
-        window.NEXORA_DATA = {
-            ecosystems,
-            ecosystemMetrics,
-            latestEcosystemMetrics,
-            tokens,
-            tokenSnapshots,
-            latestTokenSnapshots,
-            loadedAt: new Date().toISOString()
-        };
-
-        console.log("NEXORA DATABASE CONNECTION SUCCESSFUL");
-        console.log("Ecosystems:", ecosystems.length);
-        console.log("Ecosystem TVL snapshots:", ecosystemMetrics.length);
-        console.log("Tokens:", tokens.length);
-        console.log("Token market snapshots:", tokenSnapshots.length);
-
-        renderNexoraTokenMarket();return window.NEXORA_DATA;
-
-    } catch (error) {
-        console.error("NEXORA database connection failed:", error);
-        return null;
-    }
-}
-
+// ==========================================
+// RENDER TOKEN MARKET
+// ==========================================
 
 function renderNexoraTokenMarket() {
     const data = window.NEXORA_DATA;
@@ -477,8 +300,11 @@ function renderNexoraTokenMarket() {
     if (!data) return;
 
     const tbody = document.getElementById("nexoraTokenTable");
+
     if (!tbody) return;
 
+    // Include tokens with market data or independently
+    // recorded circulating supply information.
     const rows = data.tokens.map(token => {
         const market = data.latestTokenSnapshots.get(token.id);
 
@@ -486,140 +312,236 @@ function renderNexoraTokenMarket() {
     }).filter(({ token, market }) => {
         return market ||
             token.adjusted_circulating_supply != null ||
-            token.official_reported_circulating_supply != null;
+            token.official_reported_circulating_supply != null ||
+            token.circulating_supply != null;
     });
 
+
+    // Formatting helpers.
     const formatUSD = value => {
-        if (value == null) return "—";
+        if (value == null || !Number.isFinite(Number(value))) {
+            return "—";
+        }
+
         return "$" + Number(value).toLocaleString("en-US", {
             maximumFractionDigits: 2
         });
     };
 
+
     const formatCompactUSD = value => {
-        if (value == null) return "—";
+        if (value == null || !Number.isFinite(Number(value))) {
+            return "—";
+        }
+
         return "$" + Number(value).toLocaleString("en-US", {
             notation: "compact",
             maximumFractionDigits: 2
         });
     };
 
+
     const formatSupply = value => {
-        if (value == null) return "—";
+        if (value == null || !Number.isFinite(Number(value))) {
+            return "—";
+        }
+
         return Number(value).toLocaleString("en-US", {
             notation: "compact",
             maximumFractionDigits: 2
         });
     };
 
+
+    // Render table rows and apply search.
     const renderRows = search => {
-        const term = search.toLowerCase();
+        const term = String(search || "").toLowerCase();
 
         const filtered = rows.filter(({ token }) => {
             return String(token.name || "").toLowerCase().includes(term) ||
                 String(token.symbol || "").toLowerCase().includes(term);
         });
 
+
         tbody.innerHTML = filtered.map(({ token, market }) => {
+
             const change = market?.price_change_24h_percent == null
                 ? NaN
                 : Number(market.price_change_24h_percent);
 
-            const changeColor = change >= 0 ? "#16c784" : "#ea3943";
+            const changeColor = change >= 0
+                ? "#16c784"
+                : "#ea3943";
 
+
+            // Allora and other tokens with NEXORA-adjusted
+            // supply display both adjusted and official figures.
             const hasNexoraSupply =
                 token.adjusted_circulating_supply != null;
 
-            const supplyDisplay = hasNexoraSupply
-                ? `
-                    <strong>${formatSupply(token.adjusted_circulating_supply)}</strong>
-                    <div class="sub">NEXORA adjusted estimate</div>
+            let supplyDisplay;
+
+            if (hasNexoraSupply) {
+
+                supplyDisplay = `
+                    <strong>
+                        ${formatSupply(token.adjusted_circulating_supply)}
+                    </strong>
+
+                    <div class="sub">
+                        NEXORA adjusted estimate
+                    </div>
+
                     <div style="margin-top:5px">
                         ${formatSupply(token.official_reported_circulating_supply)}
                     </div>
-                    <div class="sub">Official API reported</div>
-                    <div class="sub" title="${window.escapeTokenHTML(token.supply_methodology || "")}">
+
+                    <div class="sub">
+                        Official API reported
+                    </div>
+
+                    <div class="sub"
+                         title="${window.escapeTokenHTML(token.supply_methodology || "")}">
                         Analyst estimate · Unverified
                     </div>
-                `
-                : formatSupply(
-                    market?.circulating_supply ?? token.circulating_supply
+                `;
+
+            } else {
+
+                supplyDisplay = formatSupply(
+                    market?.circulating_supply ??
+                    token.circulating_supply ??
+                    token.official_reported_circulating_supply
                 );
+            }
+
 
             return `
                 <tr>
                     <td style="padding:12px">
-                        <strong>${window.escapeTokenHTML(token.name)}</strong>
-                        <div class="sub">${window.escapeTokenHTML((token.symbol || "").toUpperCase())}</div>
+                        <strong>
+                            ${window.escapeTokenHTML(token.name)}
+                        </strong>
+
+                        <div class="sub">
+                            ${window.escapeTokenHTML(
+                                (token.symbol || "").toUpperCase()
+                            )}
+                        </div>
                     </td>
+
                     <td style="text-align:right;padding:12px">
                         ${formatUSD(market?.price_usd)}
                     </td>
+
                     <td style="text-align:right;padding:12px">
                         ${formatCompactUSD(market?.market_cap_usd)}
                     </td>
+
                     <td style="text-align:right;padding:12px">
                         ${formatCompactUSD(market?.volume_24h_usd)}
                     </td>
+
                     <td style="text-align:right;padding:12px;color:${changeColor}">
-                        ${Number.isFinite(change)
-                            ? (change > 0 ? "+" : "") + change.toFixed(2) + "%"
-                            : "—"}
+                        ${
+                            Number.isFinite(change)
+                                ? (change > 0 ? "+" : "") +
+                                  change.toFixed(2) + "%"
+                                : "—"
+                        }
                     </td>
+
                     <td style="text-align:right;padding:12px">
                         ${supplyDisplay}
                     </td>
                 </tr>
             `;
+
         }).join("");
+
 
         if (!filtered.length) {
             tbody.innerHTML = `
-                <tr><td colspan="6" style="padding:20px;text-align:center">
-                    No matching token records found.
-                </td></tr>`;
+                <tr>
+                    <td colspan="6"
+                        style="padding:20px;text-align:center">
+                        No matching token records found.
+                    </td>
+                </tr>
+            `;
         }
     };
 
-    // Escape external token names before displaying them.
-    window.escapeTokenHTML = function(value) {
-        return String(value ?? "").replace(/[&<>"']/g, char => ({
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#39;"
-        })[char]);
-    };
 
+    // Calculate market statistics.
     const totalMarketCap = rows.reduce(
-        (sum, item) => sum + Number(item.market?.market_cap_usd || 0), 0
+        (sum, item) =>
+            sum + Number(item.market?.market_cap_usd || 0),
+        0
     );
 
     const totalVolume = rows.reduce(
-        (sum, item) => sum + Number(item.market?.volume_24h_usd || 0), 0
+        (sum, item) =>
+            sum + Number(item.market?.volume_24h_usd || 0),
+        0
     );
 
-    document.getElementById("nexoraTokenCount").textContent = rows.length;
-    document.getElementById("nexoraMarketCap").textContent = formatCompactUSD(totalMarketCap);
-    document.getElementById("nexoraVolume").textContent = formatCompactUSD(totalVolume);
 
+    // Update dashboard statistics.
+    const tokenCountElement =
+        document.getElementById("nexoraTokenCount");
+
+    const marketCapElement =
+        document.getElementById("nexoraMarketCap");
+
+    const volumeElement =
+        document.getElementById("nexoraVolume");
+
+    const updatedElement =
+        document.getElementById("nexoraTokenUpdated");
+
+
+    if (tokenCountElement) {
+        tokenCountElement.textContent = rows.length;
+    }
+
+    if (marketCapElement) {
+        marketCapElement.textContent =
+            formatCompactUSD(totalMarketCap);
+    }
+
+    if (volumeElement) {
+        volumeElement.textContent =
+            formatCompactUSD(totalVolume);
+    }
+
+
+    // Find latest market snapshot timestamp.
     const latestTimestamp = rows
         .map(item => item.market?.observed_at)
         .filter(Boolean)
         .sort()
         .at(-1);
 
-    document.getElementById("nexoraTokenUpdated").textContent =
-        latestTimestamp
-            ? "Latest market snapshot: " + new Date(latestTimestamp).toLocaleString()
-            : "Market snapshot timestamp unavailable";
 
+    if (updatedElement) {
+        updatedElement.textContent = latestTimestamp
+            ? "Latest market snapshot: " +
+              new Date(latestTimestamp).toLocaleString()
+            : "Market snapshot timestamp unavailable";
+    }
+
+
+    // Initial table rendering.
     renderRows("");
 
-    const searchInput = document.getElementById("nexoraTokenSearch");
+
+    // Bind search only once.
+    const searchInput =
+        document.getElementById("nexoraTokenSearch");
 
     if (searchInput && !searchInput.dataset.searchBound) {
+
         searchInput.addEventListener("input", event => {
             renderRows(event.target.value);
         });
@@ -627,46 +549,154 @@ function renderNexoraTokenMarket() {
         searchInput.dataset.searchBound = "true";
     }
 }
-    if (!tbody.dataset.detailBound) {
-    tbody.addEventListener("click", function(e) {
-        const link = e.target.closest(".nexora-token-link");
-        if (!link) return;
 
-        e.preventDefault();
 
-        const token = data.tokens.find(
-            item => item.id === link.dataset.tokenId
+// ==========================================
+// LOAD NEXORA DATABASE
+// ==========================================
+
+async function loadNexoraDatabase() {
+
+    try {
+
+        console.log("NEXORA: Connecting to research database...");
+
+
+        const [
+            ecosystems,
+            ecosystemMetrics,
+            tokens,
+            tokenSnapshots
+        ] = await Promise.all([
+
+            nexoraFetch(
+                "ecosystems",
+                "select=id,name,category,gecko_id,token_symbol&order=name.asc&limit=500"
+            ),
+
+            nexoraFetch(
+                "ecosystem_metrics_snapshots",
+                "select=ecosystem_id,metric_name,metric_value,metric_unit,observed_at&metric_name=eq.total_value_locked&order=observed_at.desc.nullslast&limit=1000"
+            ),
+
+            nexoraFetch(
+                "tokens",
+                "select=id,name,symbol,blockchain,listing_status,coingecko_id,circulating_supply,official_reported_circulating_supply,adjusted_circulating_supply,adjusted_supply_status,supply_methodology,supply_observed_at&order=name.asc&limit=200"
+            ),
+
+            nexoraFetch(
+                "token_market_snapshots",
+                "select=token_id,price_usd,market_cap_usd,volume_24h_usd,price_change_24h_percent,circulating_supply,total_supply,max_supply,observed_at&order=observed_at.desc.nullslast&limit=500"
+            )
+
+        ]);
+
+
+        // Keep the newest snapshot for each ecosystem.
+        const latestEcosystemMetrics = new Map();
+
+        ecosystemMetrics.forEach(metric => {
+
+            if (!latestEcosystemMetrics.has(metric.ecosystem_id)) {
+
+                latestEcosystemMetrics.set(
+                    metric.ecosystem_id,
+                    metric
+                );
+
+            }
+
+        });
+
+
+        // Keep the newest market snapshot for each token.
+        const latestTokenSnapshots = new Map();
+
+        tokenSnapshots.forEach(snapshot => {
+
+            if (!latestTokenSnapshots.has(snapshot.token_id)) {
+
+                latestTokenSnapshots.set(
+                    snapshot.token_id,
+                    snapshot
+                );
+
+            }
+
+        });
+
+
+        // Make database information available to NEXORA.
+        window.NEXORA_DATA = {
+
+            ecosystems,
+
+            ecosystemMetrics,
+
+            latestEcosystemMetrics,
+
+            tokens,
+
+            tokenSnapshots,
+
+            latestTokenSnapshots,
+
+            loadedAt: new Date().toISOString()
+
+        };
+
+
+        console.log("NEXORA DATABASE CONNECTION SUCCESSFUL");
+
+        console.log("Ecosystems:", ecosystems.length);
+
+        console.log("Ecosystem TVL snapshots:", ecosystemMetrics.length);
+
+        console.log("Tokens:", tokens.length);
+
+        console.log("Token market snapshots:", tokenSnapshots.length);
+
+
+        // Display token information.
+        renderNexoraTokenMarket();
+
+        return window.NEXORA_DATA;
+
+
+    } catch (error) {
+
+        console.error(
+            "NEXORA database connection failed:",
+            error
         );
 
-        if (!token) return;
+        const tbody =
+            document.getElementById("nexoraTokenTable");
 
-        const market = data.latestTokenSnapshots.get(token.id);
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6"
+                        style="padding:20px;text-align:center">
+                        Unable to load token data. Check the database connection.
+                    </td>
+                </tr>
+            `;
+        }
 
-        const details = [
-            "NEXORA TOKEN INTELLIGENCE",
-            "",
-            "Name: " + token.name,
-            "Symbol: " + (token.symbol || "").toUpperCase(),
-            "Blockchain: " + (token.blockchain || "Not available"),
-            "Price: " + money(market?.price_usd),
-            "Market cap: " + compactMoney(market?.market_cap_usd),
-            "24h volume: " + compactMoney(market?.volume_24h_usd),
-            "24h change: " + (market?.price_change_24h_percent ?? "—") + "%",
-            "Circulating supply: " + supply(
-                market?.circulating_supply ?? token.circulating_supply
-            ),
-            "Total supply: " + supply(market?.total_supply),
-            "Maximum supply: " + supply(market?.max_supply),
-            "",
-            "Snapshot: " + (market?.observed_at || "Unavailable")
-        ];
+        return null;
 
-        alert(details.join("\n"));
-    });
+    }
 
-    tbody.dataset.detailBound = "true";
 }
-}
+
+
+// ==========================================
+// START NEXORA DATA LOADERS
+// ==========================================
+
 loadNexoraDatabase();
+
 loadLiveData();
-</script></body></html>
+
+</script></body></html> 
