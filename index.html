@@ -416,8 +416,7 @@ function renderNexoraTokenMarket() {
             ),
             nexoraFetch(
                 "tokens",
-"select=id,name,symbol,blockchain,listing_status,coingecko_id,circulating_supply&order=name.asc&limit=200"            ),
-            nexoraFetch(
+select=id,name,symbol,blockchain,listing_status,coingecko_id,circulating_supply,official_reported_circulating_supply,adjusted_circulating_supply,adjusted_supply_status,supply_methodology,supply_observed_at            nexoraFetch(
                 "token_market_snapshots",
 "select=token_id,price_usd,market_cap_usd,volume_24h_usd,price_change_24h_percent,circulating_supply,total_supply,max_supply,observed_at&order=observed_at.desc&limit=500"            )
         ]);
@@ -471,109 +470,163 @@ function renderNexoraTokenMarket() {
     }
 }
 
+
 function renderNexoraTokenMarket() {
     const data = window.NEXORA_DATA;
+
+    if (!data) return;
+
     const tbody = document.getElementById("nexoraTokenTable");
+    if (!tbody) return;
 
-    if (!data || !tbody) return;
+    const rows = data.tokens.map(token => {
+        const market = data.latestTokenSnapshots.get(token.id);
 
-    const rows = data.tokens.map(token => ({
-        token,
-        market: data.latestTokenSnapshots.get(token.id)
-    })).filter(x => x.market);
+        return { token, market };
+    }).filter(({ token, market }) => {
+        return market ||
+            token.adjusted_circulating_supply != null ||
+            token.official_reported_circulating_supply != null;
+    });
 
-    const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, c => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-    }[c]));
+    const formatUSD = value => {
+        if (value == null) return "—";
+        return "$" + Number(value).toLocaleString("en-US", {
+            maximumFractionDigits: 2
+        });
+    };
 
-    const money = v => v == null ? "—" :
-        "$" + Number(v).toLocaleString("en-US", { maximumFractionDigits: 2 });
-
-    const compactMoney = v => v == null ? "—" :
-        "$" + Number(v).toLocaleString("en-US", {
+    const formatCompactUSD = value => {
+        if (value == null) return "—";
+        return "$" + Number(value).toLocaleString("en-US", {
             notation: "compact",
             maximumFractionDigits: 2
         });
+    };
 
-    const supply = v => v == null ? "—" :
-        Number(v).toLocaleString("en-US", {
+    const formatSupply = value => {
+        if (value == null) return "—";
+        return Number(value).toLocaleString("en-US", {
             notation: "compact",
             maximumFractionDigits: 2
         });
+    };
 
     const renderRows = search => {
         const term = search.toLowerCase();
 
-        const filtered = rows.filter(({ token }) =>
-            (token.name || "").toLowerCase().includes(term) ||
-            (token.symbol || "").toLowerCase().includes(term)
-        );
+        const filtered = rows.filter(({ token }) => {
+            return String(token.name || "").toLowerCase().includes(term) ||
+                String(token.symbol || "").toLowerCase().includes(term);
+        });
 
         tbody.innerHTML = filtered.map(({ token, market }) => {
-            const change = Number(market.price_change_24h_percent);
-            const validChange = market.price_change_24h_percent != null && Number.isFinite(change);
-            const changeText = validChange
-                ? `${change > 0 ? "+" : ""}${change.toFixed(2)}%`
-                : "—";
-            const color = validChange
-                ? (change >= 0 ? "#16c784" : "#ea3943")
-                : "inherit";
+            const change = market?.price_change_24h_percent == null
+                ? NaN
+                : Number(market.price_change_24h_percent);
 
-            return `<tr>
-                <td style="padding:12px">
-<strong>
-    <a href="#" class="nexora-token-link" data-token-id="${token.id}" style="color:inherit;text-decoration:none">
-        ${escapeHTML(token.name)}
-    </a>
-</strong>                    <div class="sub">${escapeHTML((token.symbol || "").toUpperCase())}</div>
-                </td>
-                <td style="text-align:right;padding:12px">${money(market.price_usd)}</td>
-                <td style="text-align:right;padding:12px">${compactMoney(market.market_cap_usd)}</td>
-                <td style="text-align:right;padding:12px">${compactMoney(market.volume_24h_usd)}</td>
-                <td style="text-align:right;padding:12px;color:${color}">${changeText}</td>
-<td style="text-align:right;padding:12px">${supply(market.circulating_supply ?? token.circulating_supply)}</td>            </tr>`;
-        }).join("") || `
-            <tr>
-                <td colspan="6" style="padding:20px;text-align:center">
-                    No matching token market records found.
-                </td>
-            </tr>`;
+            const changeColor = change >= 0 ? "#16c784" : "#ea3943";
+
+            const hasNexoraSupply =
+                token.adjusted_circulating_supply != null;
+
+            const supplyDisplay = hasNexoraSupply
+                ? `
+                    <strong>${formatSupply(token.adjusted_circulating_supply)}</strong>
+                    <div class="sub">NEXORA adjusted estimate</div>
+                    <div style="margin-top:5px">
+                        ${formatSupply(token.official_reported_circulating_supply)}
+                    </div>
+                    <div class="sub">Official API reported</div>
+                    <div class="sub" title="${window.escapeTokenHTML(token.supply_methodology || "")}">
+                        Analyst estimate · Unverified
+                    </div>
+                `
+                : formatSupply(
+                    market?.circulating_supply ?? token.circulating_supply
+                );
+
+            return `
+                <tr>
+                    <td style="padding:12px">
+                        <strong>${window.escapeTokenHTML(token.name)}</strong>
+                        <div class="sub">${window.escapeTokenHTML((token.symbol || "").toUpperCase())}</div>
+                    </td>
+                    <td style="text-align:right;padding:12px">
+                        ${formatUSD(market?.price_usd)}
+                    </td>
+                    <td style="text-align:right;padding:12px">
+                        ${formatCompactUSD(market?.market_cap_usd)}
+                    </td>
+                    <td style="text-align:right;padding:12px">
+                        ${formatCompactUSD(market?.volume_24h_usd)}
+                    </td>
+                    <td style="text-align:right;padding:12px;color:${changeColor}">
+                        ${Number.isFinite(change)
+                            ? (change > 0 ? "+" : "") + change.toFixed(2) + "%"
+                            : "—"}
+                    </td>
+                    <td style="text-align:right;padding:12px">
+                        ${supplyDisplay}
+                    </td>
+                </tr>
+            `;
+        }).join("");
+
+        if (!filtered.length) {
+            tbody.innerHTML = `
+                <tr><td colspan="6" style="padding:20px;text-align:center">
+                    No matching token records found.
+                </td></tr>`;
+        }
+    };
+
+    // Escape external token names before displaying them.
+    window.escapeTokenHTML = function(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[char]);
     };
 
     const totalMarketCap = rows.reduce(
-        (sum, x) => sum + Number(x.market.market_cap_usd || 0), 0
+        (sum, item) => sum + Number(item.market?.market_cap_usd || 0), 0
     );
 
     const totalVolume = rows.reduce(
-        (sum, x) => sum + Number(x.market.volume_24h_usd || 0), 0
+        (sum, item) => sum + Number(item.market?.volume_24h_usd || 0), 0
     );
 
     document.getElementById("nexoraTokenCount").textContent = rows.length;
-    document.getElementById("nexoraMarketCap").textContent = compactMoney(totalMarketCap);
-    document.getElementById("nexoraVolume").textContent = compactMoney(totalVolume);
+    document.getElementById("nexoraMarketCap").textContent = formatCompactUSD(totalMarketCap);
+    document.getElementById("nexoraVolume").textContent = formatCompactUSD(totalVolume);
 
-    const newest = rows
-        .map(x => x.market.observed_at)
+    const latestTimestamp = rows
+        .map(item => item.market?.observed_at)
         .filter(Boolean)
         .sort()
         .at(-1);
 
     document.getElementById("nexoraTokenUpdated").textContent =
-        newest ? "Latest snapshot: " + new Date(newest).toLocaleString()
-               : "Snapshot timestamp unavailable";
+        latestTimestamp
+            ? "Latest market snapshot: " + new Date(latestTimestamp).toLocaleString()
+            : "Market snapshot timestamp unavailable";
 
     renderRows("");
 
     const searchInput = document.getElementById("nexoraTokenSearch");
 
-    if (searchInput && !searchInput.dataset.bound) {
-        searchInput.addEventListener("input", e => renderRows(e.target.value));
-        searchInput.dataset.bound = "true";
+    if (searchInput && !searchInput.dataset.searchBound) {
+        searchInput.addEventListener("input", event => {
+            renderRows(event.target.value);
+        });
+
+        searchInput.dataset.searchBound = "true";
     }
+}
     if (!tbody.dataset.detailBound) {
     tbody.addEventListener("click", function(e) {
         const link = e.target.closest(".nexora-token-link");
